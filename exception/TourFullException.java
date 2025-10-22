@@ -1,4 +1,7 @@
 package exception;
 
-public class TourFullException {
+public class TourFullException extends Exception{
+    public TourFullException(String message){
+        super(message);
+    }
 }
