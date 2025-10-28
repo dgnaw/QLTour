@@ -11,6 +11,7 @@ public class TourPackage implements Serializable {
     private String tourName, itinerary;
     private double price;
     private int maxCapacity;
+    private int bookedCapacity;
     private LocalDate startDate;
     private LocalDate endDate;
 
@@ -20,6 +21,7 @@ public class TourPackage implements Serializable {
         this.itinerary = itinerary;
         this.price = price;
         this.maxCapacity = maxCapacity;
+        this.bookedCapacity = 0;
         this.startDate = startDate;;
         this.endDate = endDate;
     }
@@ -60,6 +62,12 @@ public class TourPackage implements Serializable {
         this.maxCapacity = maxCapacity;
     }
 
+    public int getBookedCapacity() {
+        return bookedCapacity;
+    }
+
+    public void setBookedCapacity(int bookedCapacity) { this.bookedCapacity = bookedCapacity; }
+
     public LocalDate getStartDate() {
         return startDate;
     }
@@ -85,7 +93,10 @@ public class TourPackage implements Serializable {
     @Override
     public String toString() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        return String.format("Tour ID: %-3d | Tên: %-25s | Ngày đi: %s | Ngày về: %s | % Giá: %,.0f VND | Sức chứa: %d/%d",
-                id, tourName, startDate.format(formatter), endDate.format(formatter), price, maxCapacity);
+        // Hien thi so cho da dat / tong so cho
+        String capacityInfo = String.format("%d/%d", bookedCapacity, maxCapacity);
+
+        return String.format("Tour ID: %-3d | Tên: %-25s | Ngày đi: %s | Ngày về: %s | Giá: %,.0f VND | Chỗ: %-7s",
+                id, tourName, startDate.format(formatter), endDate.format(formatter), price, capacityInfo);
     }
 }
