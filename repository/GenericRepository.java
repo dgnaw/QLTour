@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GenericRepository<T extends Serializable> {
-    private String fileName;
+    private final String fileName;
     public GenericRepository(String fileName){
         this.fileName = fileName;
     }
