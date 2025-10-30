@@ -1,4 +1,3 @@
-// Đặt tại: src/ui/UserInputHandler.java
 package ui;
 
 import java.time.LocalDate;
@@ -11,6 +10,7 @@ public class UserInputHandler {
 
     private static final Scanner scanner = new Scanner(System.in);
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
 
     public static int getIntInput(String prompt) {
         System.out.print(prompt);
@@ -28,6 +28,7 @@ public class UserInputHandler {
         }
     }
 
+
     public static double getDoubleInput(String prompt) {
         System.out.print(prompt);
         while (true) {
@@ -43,6 +44,7 @@ public class UserInputHandler {
             }
         }
     }
+
 
     public static LocalDate getDateInput(String prompt) {
         System.out.print(prompt);
@@ -63,4 +65,9 @@ public class UserInputHandler {
         return scanner.nextLine();
     }
 
+    public static void closeScanner() {
+        if (scanner != null) {
+            scanner.close();
+        }
+    }
 }
