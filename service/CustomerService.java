@@ -2,99 +2,91 @@ package service;
 
 import exception.CustomerNotFoundException;
 import model.Customer;
+import repository.GenericRepository;
 
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class CustomerService {
-    // use Paths.get(...) to create Path
-    private final Path storagePath = Paths.get("customers.dat");
-    private final List<Customer> customers = new ArrayList<>();
+    //Khai báo Repo và List
+    private final GenericRepository<Customer> customerRepository;
+    private final List<Customer> customers;
+    //Tên file chứa dữ liệu
+    private static final String FILE_NAME = "customers.dat";
 
+    //Constructor
     public CustomerService() {
-        load();
+        this.customerRepository = new GenericRepository<>(FILE_NAME);
+        this.customers = this.customerRepository.load();
+        
+        //Cập nhật ID để tránh trùng
+        updateNextIdAfterLoad();
     }
 
-    public synchronized List<Customer> getAll() {
-        return new ArrayList<>(customers);
-    }
-
-    public synchronized Customer addCustomer(Customer c) {
-        // Customer constructor already assigns id using Customer.nextId,
-        // just ensure it's added and persisted.
-        customers.add(c);
-        save();
-        return c;
-    }
-
-    public synchronized Customer findById(int id) throws CustomerNotFoundException {
-        return customers.stream()
-                .filter(c -> c.getId() == id)
-                .findFirst()
-                .orElseThrow(() -> new CustomerNotFoundException("Customer with id " + id + " not found"));
-    }
-
-    public synchronized Optional<Customer> findByEmail(String email) {
-        if (email == null) return Optional.empty();
-        return customers.stream()
-                .filter(c -> email.equalsIgnoreCase(c.getEmail()))
-                .findFirst();
-    }
-
-    public synchronized void updateCustomer(int id, Customer updated) throws CustomerNotFoundException {
-        Customer existing = findById(id);
-        if (updated.getName() != null) existing.setName(updated.getName());
-        if (updated.getEmail() != null) existing.setEmail(updated.getEmail());
-        if (updated.getSdt() != null) existing.setSdt(updated.getSdt());
-        if (updated.getAddress() != null) existing.setAddress(updated.getAddress());
-        save();
-    }
-
-    public synchronized void deleteCustomer(int id) throws CustomerNotFoundException {
-        Customer existing = findById(id);
-        customers.remove(existing);
-        save();
-    }
-
-    private synchronized void load() {
-        if (!Files.exists(storagePath)) {
-            return;
-        }
-        try (ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(Files.newInputStream(storagePath)))) {
-            Object obj = ois.readObject();
-            if (obj instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<Customer> loaded = (List<Customer>) obj;
-                customers.clear();
-                customers.addAll(loaded);
-                // ensure nextId in Customer is advanced to avoid id collision
-                for (Customer c : customers) {
-                    Customer.updateNextId(c.getId());
-                }
+    private void updateNextIdAfterLoad() {
+        int maxId = 0;
+        for(Customer customer : customers) {
+            if(customer.getId() > maxId) {
+                maxId = customer.getId();
             }
-        } catch (EOFException eof) {
-            // empty file -> ignore
-        } catch (Exception e) {
-            System.err.println("Failed to load customers: " + e.getMessage());
         }
+        Customer.updateNextId(maxId);
     }
 
-    private synchronized void save() {
-        try {
-            // ensure parent directories exist if any (file is at project root)
-            if (storagePath.getParent() != null) Files.createDirectories(storagePath.getParent());
-        } catch (IOException ignored) {
-        }
+    //CRUD
+    //Read
+    //Lấy toàn bộ danh sách khách hàng
+    public List<Customer> getAllCustomers() {
+        return this.customers;
+    }
 
-        try (ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(Files.newOutputStream(storagePath)))) {
-            oos.writeObject(new ArrayList<>(customers));
-        } catch (IOException e) {
-            System.err.println("Failed to save customers: " + e.getMessage());
+    //Tìm khách hàng theo id
+    public Customer findCustomerById(int id) throws CustomerNotFoundException {
+        for(Customer customer : this.customers) {
+            if(customer.getId() == id) {
+                return customer;
+            }
         }
+        //Không return -> không thấy khách hàng
+        throw new CustomerNotFoundException("Khong thay khach hang voi id " + id);
+    }
+
+    //Tìm khách hàng theo email
+    public Customer findCustomerByEmail(String email) throws CustomerNotFoundException {
+        for(Customer customer : this.customers) {
+            if(customer.getEmail() != null && customer.getEmail().equalsIgnoreCase(email)) {
+                return customer;
+            }
+        }
+        //Không tìm thấy
+        throw new CustomerNotFoundException("Khong thay khach hang voi email " + email);
+    }
+
+    //Create
+    public void createCustomer(String name, String email, String sdt, String address) {
+        Customer newCustomer = new Customer(name, email, sdt, address);
+        //Thêm khách hàng vào danh sách
+        this.customers.add(newCustomer);
+        this.customerRepository.save(this.customers);
+    }
+
+    //Update
+    public void updateCustomer(int id, String name, String email, String sdt, String address) throws CustomerNotFoundException {
+        //Tìm với id
+        Customer customerToUpdate = findCustomerById(id);
+        //Cập nhật dữ liệu mới
+        customerToUpdate.setName(name);
+        customerToUpdate.setEmail(email);
+        customerToUpdate.setSdt(sdt);
+        customerToUpdate.setAddress(address);
+        //Lưu lại
+        customerRepository.save(this.customers);
+    }
+
+    //Delete
+    public void deleteCustomer(int id) throws CustomerNotFoundException {
+        Customer customerToDelete = findCustomerById(id);
+        
+        this.customers.remove(customerToDelete);
+        this.customerRepository.save(this.customers);
     }
 }

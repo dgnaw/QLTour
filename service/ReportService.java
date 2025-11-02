@@ -2,81 +2,126 @@ package service;
 
 import model.Customer;
 import model.Booking;
+import exception.BookingNotFoundException;
+import exception.CustomerNotFoundException;
 
-import java.lang.reflect.Method;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ReportService {
+    //Khai báo các Service
+    private final BookingService bookingService;
+    private final CustomerService customerService;
 
-    /**
-     * Trả về danh sách khách hàng đã đặt tour có id = tourId.
-     * Sử dụng int tourId vì model Customer dùng int id.
-     */
-    public List<Customer> getCustomersByTour(int tourId, List<Booking> bookings, List<Customer> customers) {
-        if (bookings == null || customers == null) return Collections.emptyList();
-
-        Set<Integer> customerIds = bookings.stream()
-                .map(b -> tryGetInt(b, "getTourId") == tourId ? tryGetInt(b, "getCustomerId") : null)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-
-        return customers.stream()
-                .filter(c -> customerIds.contains(c.getId()))
-                .collect(Collectors.toList());
+    //Constructor
+    public ReportService(BookingService bookingService, CustomerService customerService) {
+        this.bookingService = bookingService;
+        this.customerService = customerService;
     }
 
-    /**
-     * Tính tổng doanh thu cho một tour dựa trên danh sách booking.
-     * Hỗ trợ method getTotalPrice() hoặc getPricePerSeat()*getSeatsBooked().
-     */
-    public double totalRevenueForTour(int tourId, List<Booking> bookings) {
-        if (bookings == null) return 0.0;
-        double total = 0.0;
-        for (Booking b : bookings) {
-            Integer bTour = tryGetInt(b, "getTourId");
-            if (bTour == null || bTour != tourId) continue;
-
-            Double totalPrice = tryGetDouble(b, "getTotalPrice");
-            if (totalPrice != null) {
-                total += totalPrice;
-                continue;
-            }
-
-            Double pricePerSeat = tryGetDouble(b, "getPricePerSeat");
-            Double seats = tryGetDouble(b, "getSeatsBooked");
-            if (pricePerSeat != null && seats != null) {
-                total += pricePerSeat * seats;
+    //Báo cáo
+    //Lấy danh sách khách hàng đã đặt tour theo id
+    public List<Customer> getCustomersByTour(int tourId) {
+        List<Customer> result = new ArrayList<>();
+        List<Booking> allBookings = this.bookingService.getAllBookings();
+        
+        //Duyệt qua tất cả booking
+        for(Booking booking : allBookings) {
+            if(booking.getTourId() == tourId) {
+                try {
+                    //Tìm khách hàng theo customerId
+                    Customer customer = this.customerService.findCustomerById(booking.getCustomerId());
+                    //Kiểm tra trùng lặp
+                    if(!result.contains(customer)) {
+                        result.add(customer);
+                    }
+                } catch (CustomerNotFoundException e) {
+                    //Bỏ qua nếu không tìm thấy khách hàng
+                    System.err.println("Canh bao: " + e.getMessage());
+                }
             }
         }
-        return total;
+        
+        return result;
     }
 
-    // Reflection helpers to be tolerant with different Booking implementations
-    private Integer tryGetInt(Object obj, String methodName) {
-        try {
-            Method m = obj.getClass().getMethod(methodName);
-            Object r = m.invoke(obj);
-            if (r instanceof Integer) return (Integer) r;
-            if (r instanceof Short) return ((Short) r).intValue();
-            if (r instanceof Long) return ((Long) r).intValue();
-            if (r instanceof String) return Integer.parseInt((String) r);
-        } catch (Exception ignored) {
+    //Tính tổng doanh thu cho một tour
+    public double getTotalRevenueForTour(int tourId) {
+        double totalRevenue = 0.0;
+        List<Booking> allBookings = this.bookingService.getAllBookings();
+        
+        //Duyệt qua tất cả booking
+        for(Booking booking : allBookings) {
+            if(booking.getTourId() == tourId) {
+                //Tính doanh thu từ booking
+                totalRevenue += booking.getTotalPrice();
+            }
         }
-        return null;
+        
+        return totalRevenue;
     }
 
-    private Double tryGetDouble(Object obj, String methodName) {
-        try {
-            Method m = obj.getClass().getMethod(methodName);
-            Object r = m.invoke(obj);
-            if (r instanceof Double) return (Double) r;
-            if (r instanceof Float) return ((Float) r).doubleValue();
-            if (r instanceof Integer) return ((Integer) r).doubleValue();
-            if (r instanceof Long) return ((Long) r).doubleValue();
-            if (r instanceof String) return Double.parseDouble((String) r);
-        } catch (Exception ignored) {
+    //Tính tổng doanh thu cho tất cả tour
+    public double getTotalRevenue() {
+        double totalRevenue = 0.0;
+        List<Booking> allBookings = this.bookingService.getAllBookings();
+        
+        //Duyệt qua tất cả booking
+        for(Booking booking : allBookings) {
+            totalRevenue += booking.getTotalPrice();
         }
-        return null;
+        
+        return totalRevenue;
+    }
+
+    //Lấy danh sách booking theo khách hàng
+    public List<Booking> getBookingsByCustomer(int customerId) {
+        List<Booking> result = new ArrayList<>();
+        List<Booking> allBookings = this.bookingService.getAllBookings();
+        
+        //Duyệt qua tất cả booking
+        for(Booking booking : allBookings) {
+            if(booking.getCustomerId() == customerId) {
+                result.add(booking);
+            }
+        }
+        
+        return result;
+    }
+
+    //Lấy danh sách booking theo tour
+    public List<Booking> getBookingsByTour(int tourId) {
+        List<Booking> result = new ArrayList<>();
+        List<Booking> allBookings = this.bookingService.getAllBookings();
+        
+        //Duyệt qua tất cả booking
+        for(Booking booking : allBookings) {
+            if(booking.getTourId() == tourId) {
+                result.add(booking);
+            }
+        }
+        
+        return result;
+    }
+
+    //Đếm số lượng booking theo tour
+    public int countBookingsByTour(int tourId) {
+        int count = 0;
+        List<Booking> allBookings = this.bookingService.getAllBookings();
+        
+        //Duyệt qua tất cả booking
+        for(Booking booking : allBookings) {
+            if(booking.getTourId() == tourId) {
+                count++;
+            }
+        }
+        
+        return count;
+    }
+
+    //Đếm số lượng khách hàng theo tour
+    public int countCustomersByTour(int tourId) {
+        List<Customer> customers = getCustomersByTour(tourId);
+        return customers.size();
     }
 }
