@@ -1,9 +1,11 @@
 package service;
 
+import exception.TourNotFoundException;
 import model.Customer;
 import model.Booking;
 import exception.BookingNotFoundException;
 import exception.CustomerNotFoundException;
+import model.TourPackage;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,11 +14,13 @@ public class ReportService {
     //Khai báo các Service
     private final BookingService bookingService;
     private final CustomerService customerService;
+    private final TourService tourService;
 
     //Constructor
-    public ReportService(BookingService bookingService, CustomerService customerService) {
+    public ReportService(BookingService bookingService, CustomerService customerService, TourService tourService) {
         this.bookingService = bookingService;
         this.customerService = customerService;
+        this.tourService = tourService;
     }
 
     //Báo cáo
@@ -46,15 +50,18 @@ public class ReportService {
     }
 
     //Tính tổng doanh thu cho một tour
-    public double getTotalRevenueForTour(int tourId) {
+    public double getTotalRevenueForTour(int tourId) throws TourNotFoundException {
+
+        TourPackage tour = tourService.findTourById(tourId);
+        double pricePerPax = tour.getPrice();
         double totalRevenue = 0.0;
+
         List<Booking> allBookings = this.bookingService.getAllBookings();
-        
         //Duyệt qua tất cả booking
         for(Booking booking : allBookings) {
             if(booking.getTourId() == tourId) {
                 //Tính doanh thu từ booking
-                totalRevenue += booking.getTotalPrice();
+                totalRevenue += (booking.getNumberOfPax() * pricePerPax);
             }
         }
         
@@ -62,13 +69,13 @@ public class ReportService {
     }
 
     //Tính tổng doanh thu cho tất cả tour
-    public double getTotalRevenue() {
+    public double getTotalRevenue() throws TourNotFoundException{
         double totalRevenue = 0.0;
-        List<Booking> allBookings = this.bookingService.getAllBookings();
-        
+        List<TourPackage> allTours = tourService.getAllTours();
+
         //Duyệt qua tất cả booking
-        for(Booking booking : allBookings) {
-            totalRevenue += booking.getTotalPrice();
+        for(TourPackage tour : allTours) {
+            totalRevenue += getTotalRevenueForTour(tour.getId());
         }
         
         return totalRevenue;
