@@ -61,7 +61,7 @@ public class TourUI {
         } while (choice != 0);
     }
 
-    private void handleShowTours() {
+    public void handleShowTours() {
         System.out.println("\n------Danh sách các Tour hiện có------");
         List<TourPackage> tours = tourService.getAllTours();
 
