@@ -49,7 +49,7 @@ public class TourService {
             }
         }
         //Không return -> không thấy tour
-        throw new TourNotFoundException("Khong thay tour voi id" + id);
+        throw new TourNotFoundException("Không thấy tour với ID: " + id);
     }
 
     //Create
@@ -57,7 +57,7 @@ public class TourService {
         TourPackage newTourPackage = new TourPackage(tourName, itinerary, price, maxCapacity, startDate, endDate);
         //Thêm tour vào Package
         this.tourPackages.add(newTourPackage);
-        this.tourRepository.save(this.tourPackages);
+        saveChanges();
     }
 
     //Update
@@ -73,7 +73,7 @@ public class TourService {
         tourToUpdate.setStartDate(startDate);
         tourToUpdate.setEndDate(endDate);
         //Lưu lại
-        tourRepository.save(this.tourPackages);
+        saveChanges();
     }
 
     //Delete
@@ -81,7 +81,7 @@ public class TourService {
         TourPackage tourToDelete = findTourById(id);
 
         this.tourPackages.remove(tourToDelete);
-        this.tourRepository.save(this.tourPackages);
+        saveChanges();
     }
 
     //Check tour còn đủ slot không
@@ -101,7 +101,7 @@ public class TourService {
         }
 
         tourToCheck.setBookedCapacity(tourToCheck.getBookedCapacity() + guests);
-        tourRepository.save(this.tourPackages);
+        saveChanges();
     }
 
     public void cancelBookedSpots(int id, int guests) throws TourNotFoundException {
@@ -112,6 +112,10 @@ public class TourService {
         tour.setBookedCapacity(Math.max(0, newBookedCapacity)); // đảm bảo không âm
 
         //
-        this.tourRepository.save(this.tourPackages);
+        saveChanges();
+    }
+
+    public void saveChanges() {
+        saveChanges();
     }
 }
