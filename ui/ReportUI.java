@@ -1,161 +1,239 @@
+
 package ui;
 
 import service.ReportService;
 import service.TourService;
 import service.BookingService;
 import service.CustomerService;
+import exception.*;
 import model.Customer;
 import model.Booking;
 import model.TourPackage;
 
-import java.lang.reflect.Method;
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeParseException;
-import java.util.Date;
 import java.util.List;
-import java.util.Scanner;
-import java.util.stream.Collectors;
 
 public class ReportUI {
+
     private final ReportService reportService;
     private final BookingService bookingService;
     private final CustomerService customerService;
     private final TourService tourService;
-    private final Scanner scanner = new Scanner(System.in);
+    private final TourUI tourUI; // Dùng để hiển thị danh sách Tour
 
+    // Constructor: Nhận tất cả các Service và UI liên quan
     public ReportUI(ReportService reportService,
                     BookingService bookingService,
                     CustomerService customerService,
-                    TourService tourService) {
+                    TourService tourService,
+                    TourUI tourUI) {
         this.reportService = reportService;
         this.bookingService = bookingService;
         this.customerService = customerService;
         this.tourService = tourService;
+        this.tourUI = tourUI;
     }
 
     public void showMenu() {
-        while (true) {
+        int choice;
+        do {
             System.out.println("\n--- Báo cáo & Thống kê ---");
-            System.out.println("1. Danh sách khách hàng đã đặt một tour (theo ID tour)");
-            System.out.println("2. Tổng doanh thu của một tour (theo ID tour)");
-            System.out.println("3. Liệt kê các tour sắp khởi hành");
-            System.out.println("0. Quay lại");
-            System.out.print("Chọn: ");
-            String choice = scanner.nextLine().trim();
+            System.out.println("1. Danh sách khách hàng đã đặt một tour");
+            System.out.println("2. Tổng doanh thu của một tour");
+            System.out.println("3. Tổng doanh thu tất cả tour");
+            System.out.println("4. Danh sách booking theo tour");
+            System.out.println("5. Danh sách booking theo khách hàng");
+            System.out.println("6. Liệt kê các tour sắp khởi hành");
+            System.out.println("0. Quay lại Menu chính");
+            choice = UserInputHandler.getIntInput("Lựa chọn: ");
+
             switch (choice) {
-                case "1":
-                    customersByTour();
-                    break;
-                case "2":
-                    revenueByTour();
-                    break;
-                case "3":
-                    upcomingTours();
-                    break;
-                case "0":
-                    return;
-                default:
-                    System.out.println("Lựa chọn không hợp lệ.");
+                case 1: handleCustomersByTour(); break;
+                case 2: handleRevenueByTour(); break;
+                case 3: handleTotalRevenue(); break;
+                case 4: handleBookingsByTour(); break;
+                case 5: handleBookingsByCustomer(); break;
+                case 6: handleUpcomingTours(); break;
+                case 0: System.out.println("...Trở về menu chính"); break;
+                default: System.out.println("Lựa chọn không hợp lệ.");
             }
-        }
+        } while (choice != 0);
     }
 
-    private void customersByTour() {
-        if (bookingService == null || customerService == null) {
-            System.out.println("Dịch vụ booking hoặc customer chưa được khởi tạo.");
-            return;
-        }
+    // 1. Danh sách khách hàng đã đặt một tour
+    private void handleCustomersByTour() {
+        System.out.println("\n------Danh sách Khách hàng đã đặt Tour------");
+
         try {
-            System.out.print("Nhập ID tour (số): ");
-            int tourId = Integer.parseInt(scanner.nextLine().trim());
-            List<Booking> bookings = bookingService.getAllBookings();
-            List<Customer> customers = customerService.getAll();
-            List<Customer> result = reportService.getCustomersByTour(tourId, bookings, customers);
-            if (result.isEmpty()) {
-                System.out.println("Không tìm thấy khách hàng nào đã đặt tour này.");
+            tourUI.handleShowTours();
+            int tourId = UserInputHandler.getIntInput("Nhập ID tour: ");
+
+            // Kiểm tra tour tồn tại
+            TourPackage tour = tourService.findTourById(tourId);
+
+            List<Customer> customers = reportService.getCustomersByTour(tourId);
+
+            if (customers.isEmpty()) {
+                System.out.println("Không có khách hàng nào đã đặt tour này.");
                 return;
             }
-            System.out.println("Danh sách khách hàng đã đặt tour " + tourId + ":");
-            result.forEach(c -> System.out.println(c));
-        } catch (NumberFormatException e) {
-            System.out.println("ID tour không hợp lệ.");
+
+            System.out.println("\n--- Khách hàng đã đặt Tour: " + tour.getTourName() + " ---");
+            customers.forEach(System.out::println);
+            System.out.println("Tổng số khách hàng: " + customers.size());
+
+        } catch (TourNotFoundException e) {
+            System.err.println("Lỗi: Tour không tồn tại. " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Lỗi: " + e.getMessage());
+            System.err.println("Lỗi không xác định: " + e.getMessage());
         }
     }
 
-    private void revenueByTour() {
-        if (bookingService == null) {
-            System.out.println("Dịch vụ booking chưa được khởi tạo.");
-            return;
-        }
+    // 2. Tổng doanh thu của một tour
+    private void handleRevenueByTour() {
+        System.out.println("\n------Doanh thu của Tour------");
+
         try {
-            System.out.print("Nhập ID tour (số): ");
-            int tourId = Integer.parseInt(scanner.nextLine().trim());
-            List<Booking> bookings = bookingService.getAllBookings();
-            double total = reportService.totalRevenueForTour(tourId, bookings);
-            System.out.printf("Tổng doanh thu cho tour %d: %.2f%n", tourId, total);
-        } catch (NumberFormatException e) {
-            System.out.println("ID tour không hợp lệ.");
+            tourUI.handleShowTours();
+            int tourId = UserInputHandler.getIntInput("Nhập ID tour: ");
+
+            // Kiểm tra tour tồn tại
+            TourPackage tour = tourService.findTourById(tourId);
+
+            double totalRevenue = reportService.getTotalRevenueForTour(tourId);
+            double totalDeposit = bookingService.getTotalDepositByTour(tourId);
+            int totalBookings = reportService.countBookingsByTour(tourId);
+            int totalPax = bookingService.getTotalBookedSeats(tourId);
+
+            System.out.println("\n--- Báo cáo Doanh thu Tour: " + tour.getTourName() + " ---");
+            System.out.println("Tổng số lượt đặt: " + totalBookings);
+            System.out.println("Tổng số khách: " + totalPax + " người");
+            System.out.println("Tổng tiền cọc đã thu: " + String.format("%,.0f VND", totalDeposit));
+            System.out.println("Tổng doanh thu dự kiến: " + String.format("%,.0f VND", totalRevenue));
+            System.out.println("--------------------------------------");
+
+        } catch (TourNotFoundException e) {
+            System.err.println("Lỗi: Tour không tồn tại. " + e.getMessage());
         } catch (Exception e) {
-            System.out.println("Lỗi: " + e.getMessage());
+            System.err.println("Lỗi không xác định: " + e.getMessage());
         }
     }
 
-    private void upcomingTours() {
-        if (tourService == null) {
-            System.out.println("Dịch vụ tour chưa được khởi tạo.");
-            return;
-        }
-        List<TourPackage> tours = tourService.getAllTours();
-        if (tours == null || tours.isEmpty()) {
-            System.out.println("Không có tour nào.");
-            return;
-        }
+    // 3. Tổng doanh thu tất cả tour
+    private void handleTotalRevenue() {
+        System.out.println("\n------Tổng Doanh thu Tất cả Tour------");
 
-        LocalDate today = LocalDate.now();
-        List<TourPackage> upcoming = tours.stream()
-                .filter(t -> {
-                    LocalDate d = extractDate(t);
-                    return d != null && (d.isEqual(today) || d.isAfter(today));
-                })
-                .collect(Collectors.toList());
+        try {
+            double totalRevenue = reportService.getTotalRevenue();
+            List<TourPackage> allTours = tourService.getAllTours();
 
-        if (upcoming.isEmpty()) {
-            System.out.println("Không có tour sắp khởi hành.");
-            return;
-        }
-
-        System.out.println("Danh sách tour sắp khởi hành:");
-        upcoming.forEach(t -> System.out.println(t));
-    }
-
-    // Attempts to extract a start/departure date from TourPackage via common getters
-    private LocalDate extractDate(Object tour) {
-        if (tour == null) return null;
-        String[] candidates = {"getStartDate", "getDepartureDate", "getDate", "getStart"};
-        for (String mName : candidates) {
-            try {
-                Method m = tour.getClass().getMethod(mName);
-                Object r = m.invoke(tour);
-                if (r == null) continue;
-                if (r instanceof LocalDate) return (LocalDate) r;
-                if (r instanceof Date) {
-                    Instant ins = ((Date) r).toInstant();
-                    return ins.atZone(ZoneId.systemDefault()).toLocalDate();
-                }
-                if (r instanceof String) {
-                    try {
-                        return LocalDate.parse((String) r);
-                    } catch (DateTimeParseException ignored) {
-                    }
-                }
-            } catch (NoSuchMethodException ignored) {
-            } catch (Exception ignored) {
+            if (allTours.isEmpty()) {
+                System.out.println("Chưa có tour nào trong hệ thống.");
+                return;
             }
+
+            System.out.println("\n--- Báo cáo Tổng hợp ---");
+            System.out.println("Tổng số tour: " + allTours.size());
+            System.out.println("Tổng doanh thu tất cả tour: " + String.format("%,.0f VND", totalRevenue));
+            System.out.println("--------------------------------------");
+
+        } catch (TourNotFoundException e) {
+            System.err.println("Lỗi: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Lỗi không xác định: " + e.getMessage());
         }
-        return null;
+    }
+
+    // 4. Danh sách booking theo tour
+    private void handleBookingsByTour() {
+        System.out.println("\n------Danh sách Booking theo Tour------");
+
+        try {
+            tourUI.handleShowTours();
+            int tourId = UserInputHandler.getIntInput("Nhập ID tour: ");
+
+            // Kiểm tra tour tồn tại
+            TourPackage tour = tourService.findTourById(tourId);
+
+            List<Booking> bookings = reportService.getBookingsByTour(tourId);
+
+            if (bookings.isEmpty()) {
+                System.out.println("Chưa có booking nào cho tour này.");
+                return;
+            }
+
+            System.out.println("\n--- Danh sách Booking của Tour: " + tour.getTourName() + " ---");
+            bookings.forEach(System.out::println);
+            System.out.println("Tổng số booking: " + bookings.size());
+            System.out.println("--------------------------------------");
+
+        } catch (TourNotFoundException e) {
+            System.err.println("Lỗi: Tour không tồn tại. " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Lỗi không xác định: " + e.getMessage());
+        }
+    }
+
+    // 5. Danh sách booking theo khách hàng
+    private void handleBookingsByCustomer() {
+        System.out.println("\n------Danh sách Booking theo Khách hàng------");
+
+        try {
+            int customerId = UserInputHandler.getIntInput("Nhập ID khách hàng: ");
+
+            // Kiểm tra khách hàng tồn tại
+            Customer customer = customerService.findCustomerById(customerId);
+
+            List<Booking> bookings = reportService.getBookingsByCustomer(customerId);
+
+            if (bookings.isEmpty()) {
+                System.out.println("Khách hàng này chưa có booking nào.");
+                return;
+            }
+
+            System.out.println("\n--- Danh sách Booking của: " + customer.getName() + " ---");
+            bookings.forEach(System.out::println);
+            System.out.println("Tổng số booking: " + bookings.size());
+            System.out.println("--------------------------------------");
+
+        } catch (CustomerNotFoundException e) {
+            System.err.println("Lỗi: Khách hàng không tồn tại. " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Lỗi không xác định: " + e.getMessage());
+        }
+    }
+
+    // 6. Liệt kê các tour sắp khởi hành
+    private void handleUpcomingTours() {
+        System.out.println("\n------Tour Sắp Khởi hành------");
+
+        try {
+            List<TourPackage> allTours = tourService.getAllTours();
+
+            if (allTours.isEmpty()) {
+                System.out.println("Không có tour nào trong hệ thống.");
+                return;
+            }
+
+            LocalDate today = LocalDate.now();
+            System.out.println("\n--- Danh sách Tour sắp khởi hành (từ ngày " + today + ") ---");
+
+            boolean hasUpcomingTours = false;
+            for (TourPackage tour : allTours) {
+                LocalDate startDate = tour.getStartDate();
+                if (startDate != null && (startDate.isEqual(today) || startDate.isAfter(today))) {
+                    System.out.println(tour);
+                    hasUpcomingTours = true;
+                }
+            }
+
+            if (!hasUpcomingTours) {
+                System.out.println("Không có tour nào sắp khởi hành.");
+            }
+            System.out.println("--------------------------------------");
+
+        } catch (Exception e) {
+            System.err.println("Lỗi không xác định: " + e.getMessage());
+        }
     }
 }
