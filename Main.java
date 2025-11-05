@@ -6,16 +6,13 @@ import ui.*;
 
 public class Main {
     public static void main(String[] args){
-// --- 1. KHỞI TẠO TẦNG SERVICE (Logic và Dữ liệu) ---
+        // --- 1. KHỞI TẠO TẦNG SERVICE (Logic và Dữ liệu) ---
 
-        // Khởi tạo Service cơ bản (không phụ thuộc vào ai)
         TourService tourService = new TourService();
         CustomerService customerService = new CustomerService();
 
-        // Khởi tạo Service phụ thuộc (Booking phụ thuộc Tour)
         BookingService bookingService = new BookingService(tourService);
 
-        // Khởi tạo Service báo cáo (phụ thuộc cả 3 Service CRUD)
         ReportService reportService = new ReportService(bookingService, customerService, tourService);
 
         // --- 2. LIÊN KẾT CHÉO (Dependency Injection) ---
@@ -26,11 +23,9 @@ public class Main {
 
         // --- 3. KHỞI TẠO TẦNG UI (Giao diện) ---
 
-        // Khởi tạo UI cơ bản (Cần Service tương ứng)
         CustomerUI customerUI = new CustomerUI(customerService);
         TourUI tourUI = new TourUI(tourService);
 
-        // Khởi tạo UI phức tạp (Cần Service và các UI khác)
         BookingUI bookingUI = new BookingUI(bookingService, tourService, customerService, customerUI, tourUI);
         ReportUI reportUI = new ReportUI(reportService, bookingService, customerService, tourService, tourUI);
 
@@ -56,7 +51,6 @@ public class Main {
             }
         } while (choice != 0);
 
-        // Đóng Scanner
         UserInputHandler.closeScanner();
     }
 
