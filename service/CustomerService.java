@@ -1,6 +1,7 @@
 package service;
 
 import exception.CustomerNotFoundException;
+import model.Booking;
 import model.Customer;
 import repository.GenericRepository;
 
@@ -91,6 +92,21 @@ public class CustomerService {
     //Delete
     public void deleteCustomer(int id) throws CustomerNotFoundException {
         Customer customerToDelete = findCustomerById(id);
+
+        boolean hasBookings = false;
+
+        if (this.bookingService != null){
+            for (Booking booking : this.bookingService.getAllBookings()){
+                if (booking.getCustomerId() == id){
+                    hasBookings = true;
+                    break;
+                }
+            }
+        }
+        if (hasBookings){
+            System.err.println("Lỗi: Không thể xóa khách hàng này vì họ đã có booking liên kết");
+            return;
+        }
         
         this.customers.remove(customerToDelete);
         this.customerRepository.save(this.customers);
