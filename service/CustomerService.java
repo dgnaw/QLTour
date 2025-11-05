@@ -11,7 +11,9 @@ public class CustomerService {
     private final GenericRepository<Customer> customerRepository;
     private final List<Customer> customers;
     //Tên file chứa dữ liệu
-    private static final String FILE_NAME = "customers.dat";
+    private static final String FILE_NAME = "data/customers.dat";
+
+    private BookingService bookingService;
 
     //Constructor
     public CustomerService() {
@@ -20,6 +22,10 @@ public class CustomerService {
         
         //Cập nhật ID để tránh trùng
         updateNextIdAfterLoad();
+    }
+
+    public void setBookingService(BookingService bookingService) {
+        this.bookingService = bookingService;
     }
 
     private void updateNextIdAfterLoad() {
@@ -66,7 +72,7 @@ public class CustomerService {
         Customer newCustomer = new Customer(name, email, sdt, address);
         //Thêm khách hàng vào danh sách
         this.customers.add(newCustomer);
-        this.customerRepository.save(this.customers);
+        saveChanges();
     }
 
     //Update
@@ -79,7 +85,7 @@ public class CustomerService {
         customerToUpdate.setSdt(sdt);
         customerToUpdate.setAddress(address);
         //Lưu lại
-        customerRepository.save(this.customers);
+        saveChanges();
     }
 
     //Delete
@@ -87,6 +93,11 @@ public class CustomerService {
         Customer customerToDelete = findCustomerById(id);
         
         this.customers.remove(customerToDelete);
+        this.customerRepository.save(this.customers);
+        saveChanges();
+    }
+
+    public void saveChanges(){
         this.customerRepository.save(this.customers);
     }
 }

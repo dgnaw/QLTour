@@ -14,7 +14,7 @@ public class TourService {
     private final List<TourPackage> tourPackages;
     //Tên file chứa dữ liệu
 
-    private static final String FILE_NAME = "TourPackage.dat";
+    private static final String FILE_NAME = "data/TourPackage.dat";
 
     //Constructor
     public TourService() {
@@ -116,6 +116,6 @@ public class TourService {
     }
 
     public void saveChanges() {
-        saveChanges();
+        this.tourRepository.save(this.tourPackages);
     }
 }

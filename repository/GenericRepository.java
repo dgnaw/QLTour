@@ -16,7 +16,7 @@ public class GenericRepository<T extends Serializable> {
         if (!file.exists()){
             return new ArrayList<>();
         }
-        try(ObjectInputStream ois = new ObjectInputStream(new FileInputStream(fileName))){
+        try(ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new FileInputStream(fileName)))){
             return (List<T>) ois.readObject();
         }catch (IOException | ClassNotFoundException e){
             System.err.println("Loi doc file " + fileName + ": " + e.getMessage());
@@ -25,8 +25,9 @@ public class GenericRepository<T extends Serializable> {
     }
 
     public void save(List<T> dataList){
-        try(ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName))){
+        try(ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(fileName)))){
             oos.writeObject(dataList);
+            oos.flush();
         }catch(IOException e){
             System.err.println("Loi luu file " + fileName + ": " + e.getMessage());
         }

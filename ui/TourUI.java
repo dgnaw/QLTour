@@ -118,7 +118,7 @@ public class TourUI {
                 System.out.println("6. Sửa ngày về");
                 System.out.println("0. Hoàn tất và Lưu thay đổi");
 
-                choice = UserInputHandler.getIntInput("Nhập vào lựa chọn của bạn");
+                choice = UserInputHandler.getIntInput("Nhập vào lựa chọn của bạn: ");
 
                 switch (choice) {
                     case 1:

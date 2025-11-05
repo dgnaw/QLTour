@@ -12,7 +12,7 @@ import java.util.List;
 public class BookingService {
     private List<Booking> bookings;
     private final GenericRepository<Booking> bookingRepository;
-    private static final String BOOKINGS_FILE = "Bookings.dat";
+    private static final String BOOKINGS_FILE = "data/Bookings.dat";
     private final TourService tourService;
 
     public BookingService(TourService tourService){
@@ -22,6 +22,7 @@ public class BookingService {
 
         updateNextIdAfterLoad();
     }
+
 
     private void updateNextIdAfterLoad() {
         int maxId = 0;
@@ -60,14 +61,12 @@ public class BookingService {
     public void createBooking(int tourId, int customerId, double deposit, int numberOfPax) throws TourNotFoundException, TourFullException{
         // 1. Kiểm tra tour có đủ chỗ không (TourService sẽ ném ra lỗi nếu hết)
         tourService.bookSpots(tourId, numberOfPax);
-        // *Lưu ý: bookSpots() trong TourService sẽ tự động cập nhật bookedCapacity và lưu file.*
 
         // 2. Tạo đối tượng Booking mới
         Booking newBooking = new Booking(customerId, tourId, deposit, numberOfPax);
         this.bookings.add(newBooking);
 
-        // 3. Lưu lại danh sách booking
-        this.bookingRepository.save(this.bookings);
+        saveChanges();
     }
 
     public void cancelBooking(int id) throws BookingNotFoundException, TourNotFoundException {
@@ -81,7 +80,7 @@ public class BookingService {
         this.bookings.remove(bookingToDelete);
 
         // 4. Lưu lại danh sách booking
-        this.bookingRepository.save(this.bookings);
+        saveChanges();
     }
 
     // HÀM HỖ TRỢ BÁO CÁO (Dùng cho ReportService)
@@ -108,5 +107,7 @@ public class BookingService {
         return results;
     }
 
-
+    public void saveChanges(){
+        this.bookingRepository.save(this.bookings);
+    }
 }

@@ -96,7 +96,7 @@ public class TourPackage implements Serializable {
         // Hien thi so cho da dat / tong so cho
         String capacityInfo = String.format("%d/%d", bookedCapacity, maxCapacity);
 
-        return String.format("Tour ID: %-3d | Tên: %-25s | Ngày đi: %s | Ngày về: %s | Giá: %,.0f VND | Chỗ: %-7s",
-                id, tourName, startDate.format(formatter), endDate.format(formatter), price, capacityInfo);
+        return String.format("Tour ID: %-3d | Tên: %-15s | Lịch trình: %s | Ngày di: %s | Ngày ve: %s | Giá: %,.0f VND | Chỗ: %-7s",
+                id, tourName, itinerary, startDate.format(formatter), endDate.format(formatter), price, capacityInfo);
     }
 }

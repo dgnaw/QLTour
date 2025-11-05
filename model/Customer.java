@@ -60,6 +60,6 @@ public class Customer implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("KH ID: %-3d | Tên: %-20s | SĐT: %-12s | Email: %-20s | Địa chỉ: %s", id, name, email, sdt, address);
+        return String.format("KH ID: %-3d | Tên: %-20s | SĐT: %-12s | Email: %-20s | Địa chỉ: %s", id, name,sdt, email, address);
     }
 }
