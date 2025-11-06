@@ -19,6 +19,7 @@ public class Main {
 
         // Inject BookingService vào CustomerService để kiểm tra ràng buộc xóa
         customerService.setBookingService(bookingService);
+        tourService.setBookingService(bookingService);
 
 
         // --- 3. KHỞI TẠO TẦNG UI (Giao diện) ---

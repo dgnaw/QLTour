@@ -43,7 +43,6 @@ public class ReportUI {
             System.out.println("3. Tổng doanh thu tất cả tour");
             System.out.println("4. Danh sách booking theo tour");
             System.out.println("5. Danh sách booking theo khách hàng");
-            System.out.println("6. Liệt kê các tour sắp khởi hành");
             System.out.println("0. Quay lại Menu chính");
             choice = UserInputHandler.getIntInput("Lựa chọn: ");
 
@@ -53,7 +52,6 @@ public class ReportUI {
                 case 3: handleTotalRevenue(); break;
                 case 4: handleBookingsByTour(); break;
                 case 5: handleBookingsByCustomer(); break;
-                case 6: handleUpcomingTours(); break;
                 case 0: System.out.println("...Trở về menu chính"); break;
                 default: System.out.println("Lựa chọn không hợp lệ.");
             }
@@ -203,37 +201,4 @@ public class ReportUI {
         }
     }
 
-    // 6. Liệt kê các tour sắp khởi hành
-    private void handleUpcomingTours() {
-        System.out.println("\n------Tour Sắp Khởi hành------");
-
-        try {
-            List<TourPackage> allTours = tourService.getAllTours();
-
-            if (allTours.isEmpty()) {
-                System.out.println("Không có tour nào trong hệ thống.");
-                return;
-            }
-
-            LocalDate today = LocalDate.now();
-            System.out.println("\n--- Danh sách Tour sắp khởi hành (từ ngày " + today + ") ---");
-
-            boolean hasUpcomingTours = false;
-            for (TourPackage tour : allTours) {
-                LocalDate startDate = tour.getStartDate();
-                if (startDate != null && (startDate.isEqual(today) || startDate.isAfter(today))) {
-                    System.out.println(tour);
-                    hasUpcomingTours = true;
-                }
-            }
-
-            if (!hasUpcomingTours) {
-                System.out.println("Không có tour nào sắp khởi hành.");
-            }
-            System.out.println("--------------------------------------");
-
-        } catch (Exception e) {
-            System.err.println("Lỗi không xác định: " + e.getMessage());
-        }
-    }
 }

@@ -63,7 +63,27 @@ public class CustomerUI {
 
         try {
             String name = UserInputHandler.getStringInput("Nhập tên: ");
-            String email = UserInputHandler.getStringInput("Nhập email: ");
+
+            if (name.trim().isEmpty()) {
+                System.err.println("Lỗi: Tên không được để trống!");
+                return;
+            }
+
+            String email;
+            while (true) {
+                email = UserInputHandler.getStringInput("Nhập email (Enter để trống): ");
+
+                if (email.trim().isEmpty()) {
+                    break; // Hợp lệ (cho phép trống)
+                }
+
+                if (email.endsWith("@gmail.com")) {
+                    break; // Hợp lệ (có đuôi @gmail.com)
+                }
+
+                // Nếu không trống và không có đuôi @gmail.com
+                System.err.println("Lỗi: Email phải kết thúc bằng @gmail.com. Vui lòng nhập lại.");
+            }
             String sdt = UserInputHandler.getStringInput("Nhập SĐT: ");
             String address = UserInputHandler.getStringInput("Nhập địa chỉ: ");
 
@@ -96,8 +116,20 @@ public class CustomerUI {
             // Thu thập thông tin mới (Enter để giữ nguyên)
             String nameInput = UserInputHandler.getStringInput(
                     "Tên mới (Enter để giữ nguyên: " + existing.getName() + "): ");
-            String emailInput = UserInputHandler.getStringInput(
-                    "Email mới (Enter để giữ nguyên: " + existing.getEmail() + "): ");
+            String emailInput;
+            while (true) {
+                emailInput = UserInputHandler.getStringInput(
+                        "Email mới (Enter để giữ nguyên: " + existing.getEmail() + "): ");
+
+                if (emailInput.trim().isEmpty()) {
+                    break; // Hợp lệ (giữ nguyên)
+                }
+                if (emailInput.endsWith("@gmail.com")) {
+                    break; // Hợp lệ (email mới)
+                }
+
+                System.err.println("Lỗi: Email mới phải kết thúc bằng @gmail.com. Vui lòng nhập lại.");
+            }
             String sdtInput = UserInputHandler.getStringInput(
                     "SĐT mới (Enter để giữ nguyên: " + existing.getSdt() + "): ");
             String addressInput = UserInputHandler.getStringInput(
@@ -141,7 +173,7 @@ public class CustomerUI {
             System.out.println("\nThông tin khách hàng: " + customer);
 
             // Xác nhận xóa
-            String confirm = UserInputHandler.getStringInput("Xác nhận xóa (y/N): ");
+            String confirm = UserInputHandler.getStringInput("Xác nhận xóa (y/n): ");
             if (!"y".equalsIgnoreCase(confirm.trim())) {
                 System.out.println("Hủy thao tác xóa.");
                 return;

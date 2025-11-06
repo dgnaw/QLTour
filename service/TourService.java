@@ -1,7 +1,9 @@
 package service;
 
+import exception.BookingNotFoundException;
 import exception.TourNotFoundException;
 import exception.TourFullException;
+import model.Booking;
 import model.TourPackage;
 import repository.GenericRepository;
 
@@ -12,10 +14,14 @@ public class TourService {
     //Khai báo Repo và List
     private final GenericRepository<TourPackage> tourRepository;
     private final List<TourPackage> tourPackages;
+    private BookingService bookingService;
     //Tên file chứa dữ liệu
 
     private static final String FILE_NAME = "data/TourPackage.dat";
 
+    public void setBookingService(BookingService bookingService){
+        this.bookingService = bookingService;
+    }
     //Constructor
     public TourService() {
         this.tourRepository = new GenericRepository<>(FILE_NAME);
@@ -53,7 +59,7 @@ public class TourService {
     }
 
     //Create
-    public void createTour(String tourName, String itinerary, double price, int maxCapacity, LocalDate startDate, LocalDate endDate) throws TourNotFoundException {
+    public void createTour(String tourName, String itinerary, double price, int maxCapacity, LocalDate startDate, LocalDate endDate) {
         TourPackage newTourPackage = new TourPackage(tourName, itinerary, price, maxCapacity, startDate, endDate);
         //Thêm tour vào Package
         this.tourPackages.add(newTourPackage);
@@ -79,6 +85,23 @@ public class TourService {
     //Delete
     public void deleteTour(int id) throws TourNotFoundException {
         TourPackage tourToDelete = findTourById(id);
+
+        boolean hasBooking = false;
+        if (this.bookingService != null) {
+            // Tìm tất cả booking có tourId này
+            List<Booking> allBookings = this.bookingService.getAllBookings();
+            for (Booking booking : allBookings) {
+                if (booking.getTourId() == id) {
+                    hasBooking = true;
+                    break;
+                }
+            }
+        }
+
+        if (hasBooking){
+            System.err.println("Lỗi: Không thể xóa tour vì đã có booking!");
+            return;
+        }
 
         this.tourPackages.remove(tourToDelete);
         saveChanges();

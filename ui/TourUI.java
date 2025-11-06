@@ -80,8 +80,20 @@ public class TourUI {
             System.out.println("\n------Thêm Tour Mới------");
             String name = UserInputHandler.getStringInput("Nhập tên tour: ");
             String itinerary = UserInputHandler.getStringInput("Nhập lịch trình: ");
-            double price = UserInputHandler.getDoubleInput("Nhập giá: ");
-            int capacity = UserInputHandler.getIntInput("Nhập sức chứa tối đa: ");
+            double price;
+            do{
+                price = UserInputHandler.getIntInput("Nhập giá: ");
+                if (price < 0){
+                    System.err.println("lỗi: Giá không thể là số âm. Vui lòng nhập lại");
+                }
+            }while(price < 0);
+            int capacity;
+            do {
+                capacity = UserInputHandler.getIntInput("Nhập sức chứa tối đa: ");
+                if (capacity <= 0) {
+                    System.err.println("Lỗi: Sức chứa phải là số dương (lớn hơn 0). Vui lòng nhập lại.");
+                }
+            } while (capacity <= 0);
             LocalDate startDate = UserInputHandler.getDateInput("Nhập ngày đi (dd/MM/yyyy): ");
             LocalDate endDate = UserInputHandler.getDateInput("Nhập ngày về (dd/MM/yyyy): ");
             // Validate ngày
