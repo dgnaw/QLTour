@@ -78,9 +78,10 @@ Lưu ý: Các file dữ liệu (tours.dat, customers.dat, bookings.dat) sẽ đ�
   + GenericRepository.java: Lớp dùng chung có khả năng đọc/ghi bất kỳ danh sách đối tượng Serializable nào vào file, giúp tránh lặp code.
 
 - service: Chứa toàn bộ logic nghiệp vụ của ứng dụng.
-  + BaseService.java: Lớp cha trừu tượng cung cấp các chức năng CRUD cơ bản (Thêm, tìm, xóa, lưu).
-  + TourService.java, CustomerService.java: Các lớp con kế thừa BaseService để xử lý logic riêng cho Tour và Khách hàng.
-  + BookingService.java: Xử lý logic phức tạp hơn như kiểm tra điều kiện và tạo một lượt đặt tour mới.
+  + TourService.java: Xử lý các chức năng liên quan đến quản lý Gói Tour (thêm, sửa, xóa, tìm kiếm).
+  + CustomerService.java: Quản lý thông tin Khách hàng và các thao tác CRUD tương ứng.
+  + BookingService.java: Xử lý logic phức tạp như kiểm tra điều kiện và tạo một lượt đặt tour mới.
+  + ReportService.java: Tổng hợp và thống kê dữ liệu, ví dụ như báo cáo doanh thu, số lượt đặt tour, hoặc danh sách khách hàng theo tour.
 
 - ui: Chịu trách nhiệm về giao diện người dùng.
   + UserInputHandler.java: Lớp tiện ích để xử lý và xác thực mọi loại input từ người dùng một cách an toàn.
